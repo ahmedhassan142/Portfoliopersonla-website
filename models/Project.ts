@@ -9,7 +9,7 @@ const projectSchema = new mongoose.Schema({
   slug: {
     type: String,
     required: [true, 'Slug is required'],
-    unique: true,
+    // unique: true,
     lowercase: true,
     trim: true,
   },

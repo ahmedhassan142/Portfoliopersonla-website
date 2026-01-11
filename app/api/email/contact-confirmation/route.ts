@@ -1,15 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create transporter
+const createTransporter = () => {
+  const smtpUser = process.env.SMTP_USER || "ah770643@gmail.com";
+  const smtpPass = process.env.SMTP_PASS || "tzhixkiirkcpahrq";
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 10,
+  });
+};
 
 export async function POST(request: NextRequest) {
   try {
     const { name, email, service, message } = await request.json();
-    
-    const emailData = await resend.emails.send({
-      from: 'Tech Solutions <no-reply@techsolutions.dev>',
-      to: [email],
+    const transporter = createTransporter();
+    const smtpUser = process.env.SMTP_USER || "ah770643@gmail.com";
+
+    // Send confirmation to user
+    const userMailOptions = {
+      from: `Tech Solutions <${smtpUser}>`,
+      to: email,
       subject: 'Thank you for contacting Tech Solutions',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -30,15 +48,15 @@ export async function POST(request: NextRequest) {
         </div>
       `,
       text: `Thank you for contacting Tech Solutions! We've received your inquiry about ${service} services and will get back to you within 24 hours.`,
-    });
-    
-    // Also send notification to admin
-    await resend.emails.send({
-      from: 'Tech Solutions <no-reply@techsolutions.dev>',
-      to: ['admin@techsolutions.dev'],
+    };
+
+    // Send notification to admin
+    const adminMailOptions = {
+      from: `Tech Solutions <${smtpUser}>`,
+      to: 'admin@techsolutions.dev',
       subject: 'New Contact Form Submission',
       html: `
-        <div>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>New Contact Form Submission</h2>
           <p><strong>Name:</strong> ${name}</p>
           <p><strong>Email:</strong> ${email}</p>
@@ -47,8 +65,17 @@ export async function POST(request: NextRequest) {
           <p><a href="https://techsolutions.dev/admin">View in Dashboard</a></p>
         </div>
       `,
-    });
-    
+    };
+
+    // Send both emails
+    const [userResult, adminResult] = await Promise.all([
+      transporter.sendMail(userMailOptions),
+      transporter.sendMail(adminMailOptions)
+    ]);
+
+    console.log(`✅ Confirmation email sent to ${email}:`, userResult.messageId);
+    console.log(`✅ Notification email sent to admin:`, adminResult.messageId);
+
     return NextResponse.json({
       success: true,
       message: 'Email sent successfully',
@@ -57,7 +84,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Email error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to send email' },
+      { 
+        success: false, 
+        message: 'Failed to send email',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

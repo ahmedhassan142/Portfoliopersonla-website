@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import Contact from '@/models/Contact';
-import { verifyAdmin } from '@/lib/auth';
+import { connectDB } from '../../../../../lib/db';
+import Contact from '../../../../../models/Contact';
+import { verifyAdmin } from '../../../../../lib/auth';
 
 export async function PATCH(
   request: NextRequest,

@@ -181,6 +181,7 @@ export default function ServiceQuoteForm({ onClose }: ServiceQuoteFormProps) {
     setValue,
     formState: { errors },
   } = useForm<QuoteFormData>({
+    //@ts-ignore
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       contact: {

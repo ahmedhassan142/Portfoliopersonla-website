@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import Contact from '@/models/Contact';
-import Project from '@/models/Project';
+import { connectDB } from '../../../lib/db';
+import Contact from '../../../models/Contact';
+import Project from '../../../models/Project';
 import ServiceRequest from '@/models/ServiceRequest';
 import { verifyAdmin } from '@/lib/auth';
 

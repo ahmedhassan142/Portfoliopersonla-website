@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { ExternalLink, Github, Search, Filter, Eye } from 'lucide-react'
 
 const projects = [
@@ -8,8 +9,8 @@ const projects = [
     id: 1,
     title: 'MAN SALON WEBSITE',
     category: 'web',
-    description: 'Full-stack online store with AI-powered recommendations and real-time inventory.',
-    image: '/api/placeholder/600/400',
+    description: 'Full-stack salon management system with booking, payments, and admin dashboard.',
+    image: '/images/portfolio/man.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: 'https://mansalon-lyy2-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
     githubUrl: 'https://github.com',
@@ -20,7 +21,7 @@ const projects = [
     title: 'Health & Fitness App',
     category: 'mobile',
     description: 'Mobile application with workout tracking, nutrition plans, and AI coaching.',
-    image: '/api/placeholder/600/400',
+    image: '/images/portfolio/gyms.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: 'https://fitnesswebsite-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
     githubUrl: 'https://github.com',
@@ -30,8 +31,8 @@ const projects = [
     id: 3,
     title: 'RESTAURANT WEBSITE',
     category: 'web',
-    description: 'Real-time data visualization and business intelligence platform.',
-    image: '/api/placeholder/600/400',
+    description: 'Full-service restaurant platform with online ordering and table reservations.',
+    image: '/images/portfolio/restaurant.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: "https://restaurant-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
     githubUrl: 'https://github.com',
@@ -41,8 +42,8 @@ const projects = [
     id: 4,
     title: 'AI Chatbot System',
     category: 'ai',
-    description: 'Intelligent customer service chatbot with natural language processing.',
-    image: '/api/placeholder/600/400',
+    description: 'Intelligent customer support chatbot with natural language processing.',
+    image: '/images/portfolio/Aibots.jpg',
     tech: ['OpenAI API', 'Node.js', 'React', 'Socket.io'],
     liveUrl: 'https://example.com',
     githubUrl: 'https://github.com',
@@ -52,8 +53,8 @@ const projects = [
     id: 5,
     title: 'DENTIST WEBSITE',
     category: 'web',
-    description: 'Property listing platform with virtual tours and mortgage calculator.',
-    image: '/api/placeholder/600/400',
+    description: 'Dental clinic website with appointment booking and patient portal.',
+    image: '/images/portfolio/dentist.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: "https://dentistwebsite-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
     githubUrl: 'https://github.com',
@@ -63,8 +64,8 @@ const projects = [
     id: 6,
     title: 'REAL TIME CHAT App',
     category: 'mobile',
-    description: 'Restaurant ordering and delivery application with real-time tracking.',
-    image: '/api/placeholder/600/400',
+    description: 'Real-time messaging app with video calls and file sharing.',
+    image: '/images/portfolio/Chat-app.jpg',
     tech: ['Express', 'React', 'Mongodb', 'Redis'],
     liveUrl: 'https://the-chafrontend-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
     githubUrl: 'https://github.com',
@@ -77,6 +78,7 @@ const categories = ['all', 'web', 'mobile', 'ai']
 export default function PortfolioPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
   const filteredProjects = projects.filter(project => {
     const matchesCategory = selectedCategory === 'all' || project.category === selectedCategory
@@ -85,6 +87,10 @@ export default function PortfolioPage() {
                          project.tech.some(tech => tech.toLowerCase().includes(searchQuery.toLowerCase()))
     return matchesCategory && matchesSearch
   })
+
+  const handleImageError = (projectId: number) => {
+    setImageErrors(prev => ({ ...prev, [projectId]: true }))
+  }
 
   return (
     <div className="section-padding py-20">
@@ -149,18 +155,38 @@ export default function PortfolioPage() {
               project.featured ? 'md:col-span-2 lg:col-span-2' : ''
             }`}
           >
-            {/* Project Image */}
-            <div className="relative h-48 md:h-64 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-5xl opacity-20">
-                  {project.category === 'web' && '🌐'}
-                  {project.category === 'mobile' && '📱'}
-                  {project.category === 'ai' && '🤖'}
+            {/* Project Image - FIXED THIS SECTION */}
+            <div className="relative h-48 md:h-64 overflow-hidden">
+              {/* Show image if no error, otherwise show fallback */}
+              {!imageErrors[project.id] ? (
+                <Image
+                  src={project.image}
+                  alt={project.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={() => handleImageError(project.id)}
+                  priority={project.featured}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                  <div className="text-5xl opacity-20">
+                    {project.category === 'web' && '🌐'}
+                    {project.category === 'mobile' && '📱'}
+                    {project.category === 'ai' && '🤖'}
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4 text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Image not found</p>
+                    <p className="text-xs text-gray-500">Check: {project.image}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-4">
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              
+              {/* Hover Overlay with Actions */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-4">
                 <a
                   href={project.liveUrl}
                   target="_blank"
@@ -190,6 +216,13 @@ export default function PortfolioPage() {
                   </span>
                 </div>
               )}
+              
+              {/* Category Badge */}
+              <div className="absolute top-4 right-4">
+                <span className="px-3 py-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full capitalize">
+                  {project.category}
+                </span>
+              </div>
             </div>
 
             {/* Project Info */}
@@ -200,7 +233,7 @@ export default function PortfolioPage() {
                 </span>
                 <div className="flex items-center space-x-1">
                   <Eye className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-500">{(Math.random() * 1000).toFixed(0)}</span>
+                  <span className="text-sm text-gray-500">{(Math.random() * 1000).toFixed(0)} views</span>
                 </div>
               </div>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/db'
-import Project from '@/models/Project'
+import { connectDB } from '../../../lib/db'
+import Project from '../../../models/Project'
 
 export async function GET(request: NextRequest) {
   try {

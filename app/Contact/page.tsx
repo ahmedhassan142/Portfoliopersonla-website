@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
 import { Send, Calendar, MessageSquare, FileText } from 'lucide-react'
-import ChatWidget from '@/components/Shared/ChatWidget'
-import ServiceQuoteForm from '@/components/Client/ServiceQuoteForm'
+import ChatWidget from '../../components/Shared/ChatWidget'
+import ServiceQuoteForm from '../../components/Client/ServiceQuoteForm'
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),

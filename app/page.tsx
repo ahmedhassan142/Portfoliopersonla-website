@@ -1,4 +1,4 @@
-import ServiceCard from '@/components/ServiceCard'
+import ServiceCard from '../components/ServiceCard'
 import Link from 'next/link'
 import { 
   FaReact, 
