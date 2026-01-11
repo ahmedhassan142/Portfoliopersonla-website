@@ -13,7 +13,7 @@ const projects = [
     image: '/images/portfolio/man.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: 'https://mansalon-lyy2-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
-    githubUrl: 'https://github.com',
+    githubUrl: 'https://github.com/ahmedhassan142/Mansalon',
     featured: true
   },
   {
@@ -24,7 +24,7 @@ const projects = [
     image: '/images/portfolio/gyms.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: 'https://fitnesswebsite-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
-    githubUrl: 'https://github.com',
+    githubUrl: 'https://github.com/ahmedhassan142/fitnesswebsite',
     featured: true
   },
   {
@@ -35,7 +35,7 @@ const projects = [
     image: '/images/portfolio/restaurant.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: "https://restaurant-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
-    githubUrl: 'https://github.com',
+    githubUrl: 'https://github.com/ahmedhassan142/Restaurant',
     featured: false
   },
   {
@@ -45,8 +45,8 @@ const projects = [
     description: 'Intelligent customer support chatbot with natural language processing.',
     image: '/images/portfolio/Aibots.jpg',
     tech: ['OpenAI API', 'Node.js', 'React', 'Socket.io'],
-    liveUrl: 'https://example.com',
-    githubUrl: 'https://github.com',
+    liveUrl: 'https://ai-chatbot-git-main-ahmed-hassans-projects-96c42d63.vercel.app/',
+    githubUrl: 'https://github.com/ahmedhassan142/AI-Chatbot',
     featured: true
   },
   {
@@ -57,7 +57,7 @@ const projects = [
     image: '/images/portfolio/dentist.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: "https://dentistwebsite-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
-    githubUrl: 'https://github.com',
+    githubUrl: 'https://github.com/ahmedhassan142/Dentistwebsite',
     featured: false
   },
   {
@@ -68,7 +68,7 @@ const projects = [
     image: '/images/portfolio/Chat-app.jpg',
     tech: ['Express', 'React', 'Mongodb', 'Redis'],
     liveUrl: 'https://the-chafrontend-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
-    githubUrl: 'https://github.com',
+    githubUrl: 'https://github.com/ahmedhassan142/the-chafrontend',
     featured: false
   }
 ]
