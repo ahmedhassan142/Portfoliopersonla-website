@@ -34,8 +34,8 @@ const projects = [
     description: 'Full-service restaurant platform with online ordering and table reservations.',
     image: '/images/portfolio/restaurant.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
-    liveUrl: "https://restaurant-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
-    githubUrl: 'https://github.com/ahmedhassan142/Restaurant',
+    liveUrl: "https://restaurant-git-main-ahmed-hassans-projects-96c42d63.vercel.app/",
+    githubUrl: 'https://github.com/ahmedhassan142/Restaurantapps'
     featured: false
   },
   {
