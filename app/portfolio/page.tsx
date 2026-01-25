@@ -35,7 +35,7 @@ const projects = [
     image: '/images/portfolio/restaurant.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
     liveUrl: "https://restaurant-git-main-ahmed-hassans-projects-96c42d63.vercel.app/",
-    githubUrl: 'https://github.com/ahmedhassan142/Restaurantapps'
+    githubUrl: 'https://github.com/ahmedhassan142/Restaurantapps',
     featured: false
   },
   {
