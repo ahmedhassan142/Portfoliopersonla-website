@@ -29,12 +29,12 @@ const projects = [
   },
   {
     id: 3,
-    title: 'RESTAURANT WEBSITE',
+    title: ' ERP BASED RESTAURANT WEBSITE',
     category: 'web',
     description: 'Full-service restaurant platform with online ordering and table reservations.',
     image: '/images/portfolio/restaurant.jpg',
     tech: ['Mongodb', 'NextJs', 'Typescript','React'],
-    liveUrl: "https://restaurant-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
+    liveUrl: "https://restaurantapps-git-main-ahmed-hassans-projects-96c42d63.vercel.app",
     githubUrl: 'https://github.com/ahmedhassan142/Restaurant',
     featured: false
   },
@@ -60,14 +60,36 @@ const projects = [
     githubUrl: 'https://github.com/ahmedhassan142/Dentistwebsite',
     featured: false
   },
-  {
+   {
     id: 6,
+    title: 'Simple RESTAURANT WEBSITE',
+    category: 'web',
+    description: 'Full-service restaurant platform with online ordering and table reservations.',
+    image: '/images/portfolio/restaurant.jpg',
+    tech: ['React', 'Mongodb', 'Nextjs'],
+    liveUrl: "https://simple-restaurant-nwzy-git-main-ahmed-hassans-projects-96c42d63.vercel.app/",
+    githubUrl: 'https://github.com/ahmedhassan142/Restaurant',
+    featured: false
+  },
+  {
+    id: 7,
     title: 'REAL TIME CHAT App',
     category: 'mobile',
     description: 'Real-time messaging app with video calls and file sharing.',
     image: '/images/portfolio/Chat-app.jpg',
-    tech: ['Express', 'React', 'Mongodb', 'Redis'],
+    tech: [ 'React', 'Mongodb', 'Nextjs','Express'],
     liveUrl: 'https://the-chafrontend-git-main-ahmed-hassans-projects-96c42d63.vercel.app',
+    githubUrl: 'https://github.com/ahmedhassan142/the-chafrontend',
+    featured: false
+  },
+  {
+    id: 8,
+    title: 'REAL TIME CHAT App',
+    category: 'mobile',
+    description: 'Real-time messaging app with video calls and file sharing.',
+    image: '/images/portfolio/Chat-app.jpg',
+    tech: [ 'React', 'Mongodb', 'Nextjs'],
+    liveUrl: 'https://real-estate-git-main-ahmed-hassans-projects-96c42d63.vercel.app/',
     githubUrl: 'https://github.com/ahmedhassan142/the-chafrontend',
     featured: false
   }
