@@ -8,6 +8,7 @@ const navItems = [
   { name: 'Home', href: '/' },
   { name: 'Services', href: '/services' },
   { name: 'Portfolio', href: '/portfolio' },
+  { name: 'Blogs', href: '/blog' },
   { name: 'About', href: '/About' },
   { name: 'Contact', href: '/Contact' },
 ]
@@ -35,9 +36,11 @@ export default function Header() {
                 {item.name}
               </Link>
             ))}
+            <Link href='/services'>
             <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
               Get Started
-            </button>
+            </button></Link>
+            
           </div>
 
           {/* Mobile Menu Button */}

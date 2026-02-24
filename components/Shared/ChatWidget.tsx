@@ -1,166 +1,155 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { MessageSquare, X, Send, Clock, User } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Send, X, Minimize2, Maximize2, MessageCircle } from 'lucide-react'
 
 interface Message {
-  id: string
-  text: string
-  sender: 'user' | 'bot'
-  timestamp: Date
+  role: 'user' | 'assistant'
+  content: string
 }
-
-const initialMessages: Message[] = [
-  {
-    id: '1',
-    text: 'Hi! I\'m your AI assistant. How can I help you today?',
-    sender: 'bot',
-    timestamp: new Date(),
-  },
-]
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const [inputText, setInputText] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: '👋 Hi! How can I help you with your tech project today?' }
+  ])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   const handleSend = async () => {
-    if (!inputText.trim()) return
+    if (!input.trim() || isLoading) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText,
-      sender: 'user',
-      timestamp: new Date(),
-    }
+    const userMessage = input.trim()
+    setInput('')
+    
+    // Add user message
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    setIsLoading(true)
 
-    setMessages(prev => [...prev, userMessage])
-    setInputText('')
-    setIsTyping(true)
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: [{ role: 'user', content: userMessage }] 
+        }),
+      })
 
-    // Simulate bot response
-    setTimeout(() => {
-      const responses = [
-        "I'd be happy to help with that! Could you provide more details?",
-        "That's a great question. Let me connect you with our team.",
-        "For detailed quotes, please use our contact form or book a call.",
-        "Our typical response time is within 24 hours for email inquiries.",
-        "You can view our portfolio to see similar projects we've done.",
-      ]
-      
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: responses[Math.floor(Math.random() * responses.length)],
-        sender: 'bot',
-        timestamp: new Date(),
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
       }
-      
-      setMessages(prev => [...prev, botMessage])
-      setIsTyping(false)
-    }, 1000)
+
+      // Add assistant response
+      if (data.choices?.[0]?.message?.content) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: data.choices[0].message.content 
+        }])
+      }
+    } catch (error) {
+      console.error('Chat error:', error)
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50"
+      >
+        <MessageCircle className="w-6 h-6" />
+      </button>
+    )
   }
 
   return (
-    <>
-      {/* Chat Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
-      >
-        <MessageSquare className="w-6 h-6" />
-      </button>
+    <div className={`fixed bottom-6 right-6 w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 transition-all ${isMinimized ? 'h-14' : 'h-[500px]'}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-2xl">
+        <div className="flex items-center">
+          <MessageCircle className="w-5 h-5 mr-2" />
+          <span className="font-semibold">Tech Assistant</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setIsMinimized(!isMinimized)} className="hover:bg-white/20 p-1 rounded">
+            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+          </button>
+          <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
 
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed bottom-24 right-6 w-96 max-w-full bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold">Tech Support</h3>
-                <div className="flex items-center text-sm text-green-600 dark:text-green-400">
-                  <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                  Online
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
+      {!isMinimized && (
+        <>
           {/* Messages */}
-          <div className="h-96 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none'
-                  }`}
-                >
-                  <p>{message.text}</p>
-                  <div className={`text-xs mt-1 flex items-center ${
-                    message.sender === 'user' ? 'text-blue-200' : 'text-gray-500'
-                  }`}>
-                    <Clock className="w-3 h-3 mr-1" />
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </div>
+          <div className="h-[360px] overflow-y-auto p-4 space-y-4">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-2xl ${
+                  msg.role === 'user' 
+                    ? 'bg-blue-600 text-white rounded-br-none' 
+                    : 'bg-gray-100 dark:bg-gray-700 rounded-bl-none'
+                }`}>
+                  {msg.content}
                 </div>
               </div>
             ))}
-            
-            {isTyping && (
+            {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg rounded-bl-none">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-2xl">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100" />
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200" />
                   </div>
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex space-x-2">
+          <div className="p-4 border-t">
+            <div className="flex gap-2">
               <input
                 type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Type your message..."
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-2 focus:outline-blue-500"
+                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                disabled={isLoading}
               />
               <button
                 onClick={handleSend}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                disabled={!input.trim() || isLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Responses may take a moment. For urgent inquiries, please call us.
-            </p>
           </div>
-        </div>
+        </>
       )}
-    </>
+    </div>
   )
 }

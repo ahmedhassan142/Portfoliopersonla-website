@@ -3,7 +3,8 @@ import {
   Twitter, 
   Linkedin, 
   Mail, 
-  Heart 
+  Heart, 
+  Instagram
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -21,17 +22,17 @@ const footerLinks = {
     { name: 'Contact', href: '/contact' },
   ],
   Legal: [
-    { name: 'Privacy Policy', href: '#' },
-    { name: 'Terms of Service', href: '#' },
-    { name: 'Cookie Policy', href: '#' },
+    { name: 'Privacy Policy', href: '/Privacy' },
+    { name: 'Terms of Service', href: '/Privacy' },
+    { name: 'Cookie Policy', href: '/Privacy' },
   ]
 }
 
 const socialLinks = [
-  { icon: <Github />, href: 'https://github.com', label: 'GitHub' },
-  { icon: <Twitter />, href: 'https://twitter.com', label: 'Twitter' },
-  { icon: <Linkedin />, href: 'https://linkedin.com', label: 'LinkedIn' },
-  { icon: <Mail />, href: 'mailto:contact@example.com', label: 'Email' },
+  { icon: <Github />, href: 'https://github.com/ahmedhassan142', label: 'GitHub' },
+  { icon: <Instagram />, href: 'https://www.instagram.com/ahmed6154hassan/', label: 'Instagram' },
+  { icon: <Linkedin />, href: 'https://www.linkedin.com/in/ahmed-hassan-7a3a90212/', label: 'LinkedIn' },
+  { icon: <Mail />, href: 'mailto:ah770643@gmail.com', label: 'Email' },
 ]
 
 export default function Footer() {
@@ -100,9 +101,9 @@ export default function Footer() {
             </div>
             
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              <span>contact@techsolutions.dev</span>
+              <span>ah770643@gmail.com</span>
               <span className="mx-2">•</span>
-              <span>+1 (555) 123-4567</span>
+              <span>+923130804352</span>
             </div>
           </div>
         </div>
