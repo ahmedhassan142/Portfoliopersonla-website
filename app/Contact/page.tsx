@@ -22,11 +22,13 @@ import {
   Github,
   Loader2,
   Navigation,
-  Instagram
+  Instagram,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import ServiceQuoteForm from '../../components/Client/ServiceQuoteForm'
+import Cal, { getCalApi } from "@calcom/embed-react"
 
 // Dynamically import ChatWidget to avoid SSR issues
 const ChatWidget = dynamic(() => import('../../components/Shared/ChatWidget'), {
@@ -92,11 +94,20 @@ const faqs = [
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showQuoteForm, setShowQuoteForm] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Initialize Cal.com
+  useEffect(() => {
+    (async function () {
+      const cal = await getCalApi({"namespace":"30min"});
+      cal("ui", {"hideEventTypeDetails":false,"layout":"month_view"});
+    })();
+  }, []);
 
   const {
     register,
@@ -105,88 +116,86 @@ export default function ContactPage() {
     formState: { errors },
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
-  })// Add this logger at the top of the file
-const logger = {
-  info: (message: string, data?: any) => {
-    console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data || '')
-  },
-  error: (message: string, error?: any) => {
-    console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error || '')
-  },
-  success: (message: string, data?: any) => {
-    console.log(`[SUCCESS] ${new Date().toISOString()} - ${message}`, data || '')
+  })
+
+  const logger = {
+    info: (message: string, data?: any) => {
+      console.log(`[INFO] ${new Date().toISOString()} - ${message}`, data || '')
+    },
+    error: (message: string, error?: any) => {
+      console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error || '')
+    },
+    success: (message: string, data?: any) => {
+      console.log(`[SUCCESS] ${new Date().toISOString()} - ${message}`, data || '')
+    }
   }
-}
 
-// Update the onSubmit function
-const onSubmit = async (data: ContactFormData) => {
-  setIsSubmitting(true)
-  logger.info('Submitting contact form', data)
-  
-  try {
-    const response = await fetch('/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
+  const onSubmit = async (data: ContactFormData) => {
+    setIsSubmitting(true)
+    logger.info('Submitting contact form', data)
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
 
-    const result = await response.json()
-    logger.info('Contact API response', result)
+      const result = await response.json()
+      logger.info('Contact API response', result)
 
-    if (response.ok) {
-      toast.success(
-        <div>
-          <div className="flex items-center mb-2">
-            <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-            <span className="font-bold">Message Sent Successfully!</span>
-          </div>
-          <p className="text-sm">We'll get back to you within 24 hours.</p>
-          <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
-            Check your email for confirmation. Reference ID: {result.data?.id}
-          </p>
-        </div>,
-        { 
-          duration: 8000,
-          icon: '✅',
-        }
-      )
-      
-      logger.success('Contact form submitted successfully', { id: result.data?.id })
-      reset()
-    } else {
+      if (response.ok) {
+        toast.success(
+          <div>
+            <div className="flex items-center mb-2">
+              <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+              <span className="font-bold">Message Sent Successfully!</span>
+            </div>
+            <p className="text-sm">We'll get back to you within 24 hours.</p>
+            <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">
+              Check your email for confirmation. Reference ID: {result.data?.id}
+            </p>
+          </div>,
+          { 
+            duration: 8000,
+            icon: '✅',
+          }
+        )
+        
+        logger.success('Contact form submitted successfully', { id: result.data?.id })
+        reset()
+      } else {
+        toast.error(
+          <div>
+            <p className="font-bold mb-1">Submission Failed</p>
+            <p className="text-sm">{result.message || 'Please try again'}</p>
+            {result.errors && (
+              <ul className="text-xs mt-2 list-disc list-inside">
+                {result.errors.map((err: string, i: number) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            )}
+          </div>,
+          { duration: 6000 }
+        )
+        logger.error('Contact form submission failed', result)
+      }
+    } catch (error) {
+      logger.error('Network error in contact form', error)
       toast.error(
         <div>
-          <p className="font-bold mb-1">Submission Failed</p>
-          <p className="text-sm">{result.message || 'Please try again'}</p>
-          {result.errors && (
-            <ul className="text-xs mt-2 list-disc list-inside">
-              {result.errors.map((err: string, i: number) => (
-                <li key={i}>{err}</li>
-              ))}
-            </ul>
-          )}
+          <p className="font-bold mb-1">Network Error</p>
+          <p className="text-sm">Please check your internet connection and try again.</p>
         </div>,
-        { duration: 6000 }
+        { duration: 5000 }
       )
-      logger.error('Contact form submission failed', result)
+    } finally {
+      setIsSubmitting(false)
     }
-  } catch (error) {
-    logger.error('Network error in contact form', error)
-    toast.error(
-      <div>
-        <p className="font-bold mb-1">Network Error</p>
-        <p className="text-sm">Please check your internet connection and try again.</p>
-      </div>,
-      { duration: 5000 }
-    )
-  } finally {
-    setIsSubmitting(false)
   }
-}
-
-  
 
   const handleContactMethod = (method: typeof contactMethods[0]) => {
     switch(method.actionType) {
@@ -194,14 +203,12 @@ const onSubmit = async (data: ContactFormData) => {
         setShowQuoteForm(true)
         break
       case 'calendar':
-        window.open('https://cal.com/techservices', '_blank')
+        setShowCalendar(true)
         break
       case 'chat':
-        // Scroll to chat widget or open it
         const chatElement = document.getElementById('chat-widget')
         if (chatElement) {
           chatElement.scrollIntoView({ behavior: 'smooth' })
-          // Trigger chat open (if you have a function)
           if (typeof window !== 'undefined' && (window as any).openChat) {
             (window as any).openChat()
           }
@@ -224,6 +231,37 @@ const onSubmit = async (data: ContactFormData) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* Cal.com Modal */}
+      {showCalendar && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-4xl w-full h-[80vh] overflow-hidden shadow-2xl relative">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-bold">Schedule a Meeting</h3>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Cal.com Embed */}
+            <div className="w-full h-[calc(100%-4rem)]">
+              <Cal
+                namespace="30min"
+                calLink="ahmed-hassan-vnusbw/30min"
+                style={{ width: "100%", height: "100%", overflow: "scroll" }}
+                config={{
+                  "layout": "month_view",
+                  "useSlotsViewOnSmallScreen": "true"
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative w-full h-[700px] min-h-[700px] flex items-center justify-center overflow-hidden">
         {/* Background with Gradient */}
@@ -249,7 +287,7 @@ const onSubmit = async (data: ContactFormData) => {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-8">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-white text-sm font-medium">Available for Opportunities</span>
+              <span className="text-white text-sm font-medium">✨ Free Consultation Available</span>
             </div>
 
             {/* Heading */}
@@ -273,12 +311,12 @@ const onSubmit = async (data: ContactFormData) => {
                 <div className="text-sm text-gray-300">Support Available</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-1">&lt; 4h</div>
-                <div className="text-sm text-gray-300">Response Time</div>
+                <div className="text-3xl font-bold text-white mb-1">Instant</div>
+                <div className="text-sm text-gray-300">Scheduling</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-white mb-1">100%</div>
-                <div className="text-sm text-gray-300">Client Satisfaction</div>
+                <div className="text-sm text-gray-300">Free Consultation</div>
               </div>
             </div>
 
@@ -316,13 +354,13 @@ const onSubmit = async (data: ContactFormData) => {
       <section className="section-padding py-20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-3 gap-8 mb-12">
-            {/* Contact Info Cards - Updated with Karachi info */}
+            {/* Contact Info Cards */}
             {[
               {
                 icon: <Mail className="w-6 h-6" />,
                 title: 'Email Us',
-                value: 'contact@ah770643@gmail.com',
-                link: 'mailto:contactah770643@gmail.com',
+                value: 'ah770643@gmail.com',
+                link: 'mailto:ah770643@gmail.com',
                 response: 'Within 24 hours'
               },
               {
@@ -404,7 +442,7 @@ const onSubmit = async (data: ContactFormData) => {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* Phone Field - Updated with Pakistan format */}
+                  {/* Phone Field */}
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Phone Number
@@ -521,6 +559,24 @@ const onSubmit = async (data: ContactFormData) => {
 
             {/* Right Column - FAQ & Social */}
             <div className="space-y-8">
+              {/* Cal.com Promo Card */}
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white">
+                <h3 className="text-xl font-bold mb-2 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Free Scheduling
+                </h3>
+                <p className="text-white/90 mb-4">
+                  Book a 30-minute consultation directly on my calendar. It's free and easy!
+                </p>
+                <button
+                  onClick={() => setShowCalendar(true)}
+                  className="w-full py-3 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Schedule Now
+                </button>
+              </div>
+
               {/* FAQ Section */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl">
                 <h3 className="text-xl font-bold mb-6">Frequently Asked Questions</h3>
@@ -590,7 +646,7 @@ const onSubmit = async (data: ContactFormData) => {
         </div>
       </section>
 
-      {/* Map Section - Karachi Location */}
+      {/* Map Section */}
       <section className="h-96 relative">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28949.5987766254!2d67.0011!3d24.8607!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3eb33e066fe7b7b9%3A0x8f1e3a4b5c6d7e8f!2sGarden%20East%2C%20Karachi%2C%20Pakistan!5e0!3m2!1sen!2s!4v1620000000000!5m2!1sen!2s"
@@ -603,7 +659,6 @@ const onSubmit = async (data: ContactFormData) => {
           title="Tech Solutions Location - Garden East, Karachi"
         />
         
-        {/* Map Overlay with Direction Button */}
         <div className="absolute bottom-8 right-8 z-10">
           <a
             href="https://www.google.com/maps/search/?api=1&query=Garden+East+Karachi"

@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import ServiceCard from '../components/ServiceCard'
-import ChatWidget from '@/components/Shared/ChatWidget'
-
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { 
   FaReact, 
   FaMobileAlt, 
@@ -19,9 +18,7 @@ import {
   FaUsers,
   FaAward,
   FaGlobe,
-  FaCode,
   FaCloud,
-  FaShieldAlt,
   FaChartLine
 } from 'react-icons/fa'
 import { 
@@ -38,8 +35,19 @@ import {
   SiKubernetes,
   SiTensorflow
 } from 'react-icons/si'
-import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion'
-import Tilt from 'react-parallax-tilt'
+import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+
+// Dynamically import ChatWidget to avoid SSR issues
+const ChatWidget = dynamic(() => import('@/components/Shared/ChatWidget'), {
+  ssr: false,
+  loading: () => null
+})
+
+// Dynamically import Tilt with SSR disabled
+const Tilt = dynamic(() => import('react-parallax-tilt'), { 
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-gray-100 dark:bg-gray-800 animate-pulse rounded-2xl"></div>
+})
 
 const services = [
   {
@@ -97,6 +105,7 @@ export default function Home() {
   const heroRef = useRef(null)
   const statsRef = useRef(null)
   const isStatsInView = useInView(statsRef, { once: true, amount: 0.3 })
+  const [mounted, setMounted] = useState(false)
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8])
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95])
@@ -104,7 +113,10 @@ export default function Home() {
   
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   
+  // Client-side only effect with window check
   useEffect(() => {
+    setMounted(true)
+    
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
         x: (e.clientX / window.innerWidth - 0.5) * 20,
@@ -116,9 +128,11 @@ export default function Home() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
-      {/* Animated Background Particles */}
+  // Particles component - only render on client
+  const Particles = () => {
+    if (!mounted) return null
+    
+    return (
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.1),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(147,51,234,0.1),transparent_50%)]" />
         {[...Array(20)].map((_, i) => (
@@ -126,12 +140,12 @@ export default function Home() {
             key={i}
             className="absolute w-1 h-1 bg-blue-500/20 rounded-full"
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
             }}
             animate={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
               transition: {
                 duration: Math.random() * 20 + 10,
                 repeat: Infinity,
@@ -144,6 +158,24 @@ export default function Home() {
           />
         ))}
       </div>
+    )
+  }
+
+  // Loading state
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading amazing experience...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      <Particles />
 
       {/* Hero Section with Parallax */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -160,7 +192,7 @@ export default function Home() {
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: 'url("https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")',
-              transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`,
+              transform: mounted ? `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)` : 'none',
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-blue-900/80 to-purple-900/90" />
@@ -222,9 +254,9 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            style={{
+            style={mounted ? {
               transform: `perspective(1000px) rotateX(${mousePosition.y * 0.5}deg) rotateY(${mousePosition.x * 0.5}deg)`,
-            }}
+            } : {}}
           >
             <span className="text-white">Build Your</span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 block mt-2">
@@ -419,9 +451,6 @@ export default function Home() {
               We work with modern technologies to build robust and scalable solutions
             </p>
           </motion.div>
-           <div id="chat-widget">
-        <ChatWidget />
-      </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {technologies.map((tech, index) => (
@@ -603,8 +632,12 @@ export default function Home() {
             </div>
           </motion.div>
         </div>
-
       </section>
+
+      {/* Chat Widget */}
+      <div id="chat-widget">
+        <ChatWidget />
+      </div>
     </div>
   )
 }
