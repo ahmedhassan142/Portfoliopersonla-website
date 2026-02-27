@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GrokClient, GrokModels } from '../../../lib/grokClient';
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
 const OPENROUTER_SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const OPENROUTER_SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Tech Solutions';
 const GROK_MODEL = process.env.NEXT_PUBLIC_GROK_MODEL || GrokModels.GROK_3_MINI;

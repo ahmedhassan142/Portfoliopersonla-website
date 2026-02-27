@@ -5,22 +5,7 @@ import ChatWidget from '@/components/Shared/ChatWidget'
 import { Calendar, User, ArrowRight, Clock, Eye, Heart, Tag, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Metadata } from 'next';
-import { pageSEO } from '../seo.config';
 
-export const metadata: Metadata = {
-  title: pageSEO.blog.title,
-  description: pageSEO.blog.description,
-  keywords: pageSEO.blog.keywords,
-  openGraph: {
-    title: pageSEO.blog.title,
-    description: pageSEO.blog.description,
-    url: `https://techsolutions.dev${pageSEO.blog.path}`,
-  },
-  alternates: {
-    canonical: `https://techsolutions.dev${pageSEO.blog.path}`,
-  },
-};
 
 // Define Blog Post interface matching dental website pattern
 interface BlogPost {
