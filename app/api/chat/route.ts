@@ -4,10 +4,10 @@ import dotenv from 'dotenv'
 import path from 'path';
 
 // Explicitly load .env.local
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY 
-const OPENROUTER_SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const OPENROUTER_SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://vercel.com/ahmed-hassans-projects-96c42d63';
 const OPENROUTER_SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Tech Solutions';
 const GROK_MODEL = process.env.NEXT_PUBLIC_GROK_MODEL || GrokModels.GROK_3_MINI;
 
