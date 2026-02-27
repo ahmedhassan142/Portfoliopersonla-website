@@ -12,6 +12,7 @@
     "@calcom/embed-react": "^1.5.3",
     "@hookform/resolvers": "^5.2.2",
     "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
     "framer-motion": "^12.34.3",
     "jsonwebtoken": "^9.0.3",
     "leaflet": "^1.9.4",

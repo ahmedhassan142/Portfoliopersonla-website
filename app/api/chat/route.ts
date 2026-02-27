@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GrokClient, GrokModels } from '../../../lib/grokClient';
+import dotenv from 'dotenv'
+import path from 'path';
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY ||'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';
+// Explicitly load .env.local
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY 
 const OPENROUTER_SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const OPENROUTER_SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Tech Solutions';
 const GROK_MODEL = process.env.NEXT_PUBLIC_GROK_MODEL || GrokModels.GROK_3_MINI;
