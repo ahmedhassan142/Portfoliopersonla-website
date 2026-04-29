@@ -1,93 +1,128 @@
-export const GrokModels = {
-  GROK_3_MINI: 'x-ai/grok-3-mini-beta',     // CHEAPEST: $0.30/1M tokens - recommended for most tasks
-  GROK_3: 'x-ai/grok-3-beta',               // $3.00/1M tokens - best reasoning
-  GROK_2_MINI: 'x-ai/grok-2-mini-beta',     // Legacy, slightly cheaper but slower
-  GROK_VISION: 'x-ai/grok-vision-beta',     // For image understanding
-  GROK_4: 'x-ai/grok-4'
+// lib/grokClient.ts
+import axios from 'axios';
+
+// Groq API Configuration - Using environment variables
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+export const GroqModels = {
+  // Llama Models - Best for general chat and content
+  LLAMA_3_70B: 'llama3-70b-8192',           // Most powerful, slower
+  LLAMA_3_8B: 'llama3-8b-8192',             // Fast, good for simple tasks
+  LLAMA_3_3_70B: 'llama-3.3-70b-versatile', // Best balance (RECOMMENDED)
+  
+  // Mixtral Models - Good for complex reasoning
+  MIXTRAL_8x7B: 'mixtral-8x7b-32768',
+  
+  // Gemma Models - Lightweight and fast
+  GEMMA_2_9B: 'gemma2-9b-it',
+};
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatOptions {
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
 }
 
 export class GrokClient {
-  private apiKey: string
-  private siteUrl: string
-  private siteName: string
+  private apiKey: string;
+  private baseURL: string;
+  private defaultModel: string;
 
-  constructor(apiKey: string, siteUrl: string, siteName: string) {
-    this.apiKey = apiKey
-    this.siteUrl = siteUrl
-    this.siteName = siteName
+  constructor(
+    apiKey?: string,
+    baseURL: string = GROQ_API_URL,
+    defaultModel: string = GroqModels.LLAMA_3_3_70B
+  ) {
+    // Use provided apiKey or fallback to environment variable
+    if (apiKey) {
+      this.apiKey = apiKey;
+    } else if (GROQ_API_KEY) {
+      this.apiKey = GROQ_API_KEY;
+    } else {
+      throw new Error('GROQ_API_KEY is not defined in environment variables');
+    }
+    
+    this.baseURL = baseURL;
+    this.defaultModel = defaultModel;
+    
+    console.log('🚀 GrokClient initialized with model:', this.defaultModel);
   }
 
-  async chatCompletion(messages: any[], options: any = {}) {
+  async chatCompletion(messages: ChatMessage[], options: ChatOptions = {}) {
+    const {
+      model = this.defaultModel,
+      temperature = 0.7,
+      maxTokens = 1000,
+      topP = 0.9,
+    } = options;
+
     try {
-      console.log('📡 Calling OpenRouter with model:', options.model);
+      console.log(`📡 Calling Groq API with model: ${model}`);
       
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
+      const requestBody: any = {
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+        top_p: topP,
+      };
+
+      const response = await axios.post(this.baseURL, requestBody, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': this.siteUrl,
-          'X-Title': this.siteName,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          model: options.model || GrokModels.GROK_3_MINI,
-          messages: messages,
-          temperature: options.temperature || 0.7,
-          max_tokens: options.maxTokens || 1000,
-          top_p: options.topP || 0.9,
-          frequency_penalty: options.frequencyPenalty || 0,
-          presence_penalty: options.presencePenalty || 0,
-        }),
+        timeout: 60000
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ OpenRouter API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        
-        // If model is invalid, try fallback model
-        if (response.status === 400 && errorData.error?.message?.includes('valid model')) {
-          console.log('⚠️ Model invalid, trying fallback model: openai/gpt-3.5-turbo');
-          
-          // Retry with fallback model
-          const fallbackResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${this.apiKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': this.siteUrl,
-              'X-Title': this.siteName,
-            },
-            body: JSON.stringify({
-              model: 'openai/gpt-3.5-turbo',
-              messages: messages,
-              temperature: options.temperature || 0.7,
-              max_tokens: options.maxTokens || 1000,
-            }),
-          });
-          
-          if (!fallbackResponse.ok) {
-            const fallbackError = await fallbackResponse.json();
-            throw new Error(`Fallback failed: ${JSON.stringify(fallbackError)}`);
-          }
-          
-          console.log('✅ Fallback successful with GPT-3.5');
-          return fallbackResponse.json();
-        }
-        
-        throw new Error(`OpenRouter API error: ${response.status} - ${JSON.stringify(errorData)}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ OpenRouter response received');
-      return data;
-
+      console.log('✅ Groq API response received');
+      return response.data;
     } catch (error) {
-      console.error('❌ GrokClient error:', error);
+      console.error('❌ Groq API error:', error);
       throw error;
     }
   }
+
+  // Simple chat method for portfolio chatbot
+  async chat(messages: ChatMessage[], options?: ChatOptions) {
+    return this.chatCompletion(messages, options);
+  }
 }
+
+// Singleton instance - will throw error if GROQ_API_KEY is not set
+let groqClientInstance: GrokClient | null = null;
+
+export function getGroqClient(): GrokClient {
+  if (!groqClientInstance) {
+    if (!GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY environment variable is not set');
+    }
+    groqClientInstance = new GrokClient();
+  }
+  return groqClientInstance;
+}
+
+// Export a function to check if API key is configured
+export function isGroqConfigured(): boolean {
+  return !!GROQ_API_KEY;
+}
+
+// Export the client (will throw error if not configured)
+export const groqClient = (() => {
+  if (!GROQ_API_KEY) {
+    console.warn('⚠️ GROQ_API_KEY is not set. Please add it to your .env.local file');
+    // Return a dummy client that throws helpful error when used
+    return {
+      chatCompletion: async () => { throw new Error('GROQ_API_KEY not configured. Please add it to .env.local'); },
+      chat: async () => { throw new Error('GROQ_API_KEY not configured. Please add it to .env.local'); }
+    } as any;
+  }
+  return new GrokClient();
+})();
