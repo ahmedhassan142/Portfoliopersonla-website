@@ -1,4 +1,4 @@
-// target-website/app/api/webhook/route.ts
+// ecomruns.com/app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import {connectDB} from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
@@ -8,20 +8,11 @@ export async function POST(request: NextRequest) {
     // 1. Connect to database
     await connectDB();
     
-    // 2. Get the content from request
+    // 2. Get content from AI tool
     const body = await request.json();
-    const { 
-      title, 
-      content, 
-      source = 'AI Content Writer',
-      metadata = {},
-      tags = [],
-      category = 'General',
-      excerpt = null,
-      featured = false,
-    } = body;
+    const { title, content, category, tags } = body;
     
-    // 3. Validate required fields
+    // 3. Validate
     if (!title || !content) {
       return NextResponse.json({
         success: false,
@@ -29,7 +20,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // 4. Generate slug from title (matching your model's logic)
+    // 4. Generate slug from title
     const slug = title
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
@@ -37,33 +28,22 @@ export async function POST(request: NextRequest) {
       .replace(/--+/g, '-')
       .trim();
     
-    // 5. Generate excerpt if not provided
-    const postExcerpt = excerpt || content.substring(0, 160);
-    
-    // 6. Calculate reading time (matches your model)
-    const words = content.split(/\s+/).length;
-    const readingTime = Math.ceil(words / 200);
-    
-    // 7. Create the blog post
-    const post = new BlogPost({
+    // 5. Create blog post (automatically saved to database)
+    const post = await BlogPost.create({
       title,
       slug,
-      excerpt: postExcerpt,
+      excerpt: content.substring(0, 160),
       content,
       category: category || 'General',
       tags: tags || [],
-      source: source || 'AI Content Writer',
-      featured: featured || false,
-      status: 'published',
+      status: 'published',  // ← Automatically published
       published: true,
       publishedAt: new Date(),
-      readingTime: readingTime,
-      metadata: metadata || {},
+      readingTime: Math.ceil(content.split(/\s+/).length / 200),
+      source: 'AI Content Writer',
     });
     
-    await post.save();
-    
-    // 8. Return success response
+    // 6. Return success with post URL
     return NextResponse.json({
       success: true,
       message: 'Blog post created successfully!',
@@ -71,95 +51,64 @@ export async function POST(request: NextRequest) {
         id: post._id,
         title: post.title,
         slug: post.slug,
-        url: `/blog/${post.slug}`,
-        createdAt: post.createdAt,
-        publishedAt: post.publishedAt,
-        readingTime: post.readingTime,
+        url: `/blog/${post.slug}`,  // ← The post will appear here
       }
     }, { status: 201 });
     
   } catch (error: any) {
     console.error('Webhook error:', error);
     
-    // Handle duplicate slug error
-    if (error.code === 11000 || error.message?.includes('duplicate')) {
-      // If slug exists, add a timestamp to make it unique
-      try {
-        const body = await request.json();
-        const { title, content } = body;
-        
-        const timestamp = Date.now();
-        const newSlug = `${title
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/--+/g, '-')
-          .trim()}-${timestamp}`;
-        
-        const post = new BlogPost({
-          title,
-          slug: newSlug,
-          excerpt: content.substring(0, 160),
-          content,
-          category: body.category || 'General',
-          tags: body.tags || [],
-          source: 'AI Content Writer',
-          status: 'published',
-          published: true,
-          publishedAt: new Date(),
-          readingTime: Math.ceil(content.split(/\s+/).length / 200),
-        });
-        
-        await post.save();
-        
-        return NextResponse.json({
-          success: true,
-          message: 'Blog post created with unique slug!',
-          post: {
-            id: post._id,
-            title: post.title,
-            slug: post.slug,
-            url: `/blog/${post.slug}`,
-          }
-        }, { status: 201 });
-        
-      } catch (retryError: any) {
-        return NextResponse.json({
-          success: false,
-          error: 'Failed to create post with unique slug: ' + retryError.message
-        }, { status: 500 });
-      }
-    }
-    
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map((err: any) => err.message);
+    // Handle duplicate slug (add timestamp)
+    if (error.code === 11000) {
+      const { title, content } = await request.json();
+      const newSlug = `${title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/--+/g, '-')
+        .trim()}-${Date.now()}`;
+      
+      const post = await BlogPost.create({
+        title,
+        slug: newSlug,
+        excerpt: content.substring(0, 160),
+        content,
+        status: 'published',
+        published: true,
+        publishedAt: new Date(),
+        readingTime: Math.ceil(content.split(/\s+/).length / 200),
+        source: 'AI Content Writer',
+      });
+      
       return NextResponse.json({
-        success: false,
-        error: 'Validation failed',
-        details: errors
-      }, { status: 400 });
+        success: true,
+        post: {
+          id: post._id,
+          title: post.title,
+          slug: post.slug,
+          url: `/blog/${post.slug}`,
+        }
+      }, { status: 201 });
     }
     
     return NextResponse.json({
       success: false,
-      error: error.message || 'Failed to create blog post'
+      error: error.message
     }, { status: 500 });
   }
 }
 
-// GET endpoint for testing
+// GET endpoint to test if webhook is working
 export async function GET() {
-  return NextResponse.json({
+  return NextResponse.json({ 
     success: true,
-    message: 'Webhook endpoint is working!',
-    instructions: 'Send a POST request with { title, content } to create a blog post',
+    status: 'Webhook is active!',
+    message: 'Send POST requests with { title, content } to create blog posts',
     example: {
       title: 'My Blog Post',
-      content: 'This is the content of my blog post...',
+      content: 'This is the content...',
       category: 'Tech',
-      tags: ['AI', 'Technology'],
-      featured: false,
+      tags: ['AI', 'Technology']
     }
   });
 }
