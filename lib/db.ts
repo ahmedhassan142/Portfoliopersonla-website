@@ -45,3 +45,6 @@ export async function connectDB() {
 
   return cached.conn;
 }
+
+// ✅ ADD THIS DEFAULT EXPORT TO FIX THE ISSUE
+export default connectDB;
