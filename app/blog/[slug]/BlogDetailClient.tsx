@@ -80,15 +80,13 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
     return post.title || 'Untitled'
   }
 
-  // ✅ Parse content with proper heading detection
+  // ✅ Parse content with proper heading detection - REMOVE the main H1 from content
   const parseContent = (content: string): string => {
     if (!content) return ''
     
     let parsed = content
-      // ✅ Convert # Heading to <h1>Heading</h1> (main title)
-      .replace(/^#\s+(.+)$/gm, (match, heading) => {
-        return `\n\n<h1>${heading}</h1>\n\n`
-      })
+      // ✅ REMOVE the main # Heading (H1) from content - it's already displayed above
+      .replace(/^#\s+.+$/m, '')
       // ✅ Convert ## Heading to <h2>Heading</h2> (subheadings)
       .replace(/^##\s+(.+)$/gm, (match, heading) => {
         return `\n\n<h2>${heading}</h2>\n\n`
@@ -121,8 +119,12 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
       .replace(/\n\n/g, '</p><p>')
       .replace(/\n/g, '<br />')
     
-    // Wrap in paragraphs if not already wrapped
-    if (!parsed.startsWith('<')) {
+    // Clean up empty paragraphs
+    parsed = parsed.replace(/<p><\/p>/g, '')
+    parsed = parsed.replace(/<p>\s*<br\s*\/?>\s*<\/p>/g, '')
+    
+    // Wrap in paragraphs if not already wrapped and not empty
+    if (!parsed.startsWith('<') && parsed.trim()) {
       parsed = `<p>${parsed}</p>`
     }
     
@@ -187,7 +189,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           </Link>
         </div>
 
-        {/* ✅ MAIN HEADING - Extracted from content (only # Heading) */}
+        {/* ✅ MAIN HEADING - Displayed once at the top */}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
           {mainHeading}
         </h1>
@@ -223,7 +225,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           </button>
         </div>
 
-        {/* ✅ Content with proper heading detection */}
+        {/* ✅ Content - Main heading removed, only subheadings and body */}
         <div 
           className="prose prose-lg dark:prose-invert max-w-none"
           dangerouslySetInnerHTML={{ __html: parseContent(post.content) }}
