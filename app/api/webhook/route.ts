@@ -1,9 +1,7 @@
 // ahtech.fun/app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import {connectDB} from '@/lib/db';  // Use this if your db connection is in lib/mongodb
-// OR
-// import connectDB from '@/lib/db';  // If your db connection is in lib/db
-
+// ✅ CHANGE THIS LINE to match your actual db connection file
+import {connectDB} from '@/lib/db';  // or '@/lib/db' depending on your setup
 import BlogPost from '@/models/BlogPost';
 
 export async function POST(request: NextRequest) {
