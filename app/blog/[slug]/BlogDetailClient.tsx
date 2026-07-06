@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Calendar, User, ArrowLeft, Clock, Eye, Heart, Tag, Loader2, Share2, ImageIcon } from 'lucide-react'
+import { Calendar, User, ArrowLeft, Clock, Eye, Heart, Tag, Loader2, Share2, ImageIcon, Sparkles } from 'lucide-react'
 import ChatWidget from '@/components/Shared/ChatWidget'
 
 interface Author {
@@ -47,6 +47,7 @@ const defaultImage = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f4
 export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClientProps) {
   const [liked, setLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.stats?.likes || 0)
+  const [mainHeading, setMainHeading] = useState<string>('')
 
   const handleLike = async () => {
     if (liked) return
@@ -65,12 +66,30 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
     }
   }
 
+  // ✅ Extract ONLY the MAIN heading (H1) from content
+  const extractMainHeading = (content: string): string => {
+    if (!content) return ''
+    
+    // ✅ Look for # Heading (H1) - only single #, not ## or ###
+    const h1Match = content.match(/^#\s+(.+)$/m)
+    if (h1Match) {
+      return h1Match[1].trim()
+    }
+    
+    // If no H1 found, use the post title as fallback
+    return post.title || 'Untitled'
+  }
+
   // ✅ Parse content with proper heading detection
   const parseContent = (content: string): string => {
     if (!content) return ''
     
     let parsed = content
-      // Convert ## Heading to <h2>Heading</h2>
+      // ✅ Convert # Heading to <h1>Heading</h1> (main title)
+      .replace(/^#\s+(.+)$/gm, (match, heading) => {
+        return `\n\n<h1>${heading}</h1>\n\n`
+      })
+      // ✅ Convert ## Heading to <h2>Heading</h2> (subheadings)
       .replace(/^##\s+(.+)$/gm, (match, heading) => {
         return `\n\n<h2>${heading}</h2>\n\n`
       })
@@ -102,6 +121,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
       .replace(/\n\n/g, '</p><p>')
       .replace(/\n/g, '<br />')
     
+    // Wrap in paragraphs if not already wrapped
     if (!parsed.startsWith('<')) {
       parsed = `<p>${parsed}</p>`
     }
@@ -115,6 +135,17 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
     const words = content.replace(/[#*]/g, '').split(/\s+/).length
     return Math.max(1, Math.ceil(words / 200))
   }
+
+  // ✅ Check if content is AI generated
+  const isAIGenerated = post.source === 'AI Content Writer' || post.author === 'AI Content Writer'
+
+  // ✅ Extract main heading on component mount
+  useEffect(() => {
+    if (post.content) {
+      const heading = extractMainHeading(post.content)
+      setMainHeading(heading)
+    }
+  }, [post.content])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -146,7 +177,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           )}
         </div>
 
-        {/* ✅ Category Tag - Only category shown */}
+        {/* ✅ Category Tag */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <Link
             href={`/blog?category=${encodeURIComponent(post.category)}`}
@@ -156,12 +187,12 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           </Link>
         </div>
 
-        {/* Title */}
+        {/* ✅ MAIN HEADING - Extracted from content (only # Heading) */}
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-          {post.title}
+          {mainHeading}
         </h1>
 
-        {/* ✅ Metadata - Removed AI Content Generator and 1 min read */}
+        {/* ✅ Metadata */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
           <span className="flex items-center">
             <User className="w-4 h-4 mr-1" />
@@ -174,6 +205,10 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
               day: 'numeric',
               year: 'numeric'
             })}
+          </span>
+          <span className="flex items-center">
+            <Clock className="w-4 h-4 mr-1" />
+            {getReadingTime(post.content)} min read
           </span>
           <span className="flex items-center">
             <Eye className="w-4 h-4 mr-1" />
@@ -194,14 +229,17 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           dangerouslySetInnerHTML={{ __html: parseContent(post.content) }}
         />
 
-        {/* ✅ SEO Keywords Section - Only shows tags, no extra text */}
+        {/* ✅ SEO Keywords Section - Displayed at the BOTTOM of content */}
         {post.tags && post.tags.length > 0 && (
           <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-4">
-              {/* <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" /> */}
-              {/* <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 SEO Keywords
-              </h3> */}
+              </h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                ({post.tags.length} keywords)
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
