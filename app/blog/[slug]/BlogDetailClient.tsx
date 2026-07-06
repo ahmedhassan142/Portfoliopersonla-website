@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Calendar, User, ArrowLeft, Clock, Eye, Heart, Tag, Loader2, Share2 } from 'lucide-react'
+import { Calendar, User, ArrowLeft, Clock, Eye, Heart, Tag, Loader2, Share2, ImageIcon } from 'lucide-react'
 import ChatWidget from '@/components/Shared/ChatWidget'
 
 interface Author {
@@ -40,6 +40,9 @@ interface BlogDetailClientProps {
   relatedPosts: BlogPost[]
 }
 
+// ✅ Default image if no featured image
+const defaultImage = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'
+
 export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClientProps) {
   const [liked, setLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.stats?.likes || 0)
@@ -73,17 +76,23 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           Back to Blog
         </Link>
 
-        {/* Featured Image */}
-        {post.featuredImage && (
-          <div className="w-full h-[400px] rounded-2xl overflow-hidden mb-8">
-            <img
-              src={post.featuredImage}
-              alt={post.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-        )}
+        {/* ✅ Featured Image with fallback */}
+        <div className="w-full h-[400px] rounded-2xl overflow-hidden mb-8 relative">
+          <img
+            src={post.featuredImage || defaultImage}
+            alt={post.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          {!post.featuredImage && (
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/30 to-blue-600/30 flex items-center justify-center">
+              <div className="text-white text-center">
+                <ImageIcon className="w-16 h-16 mx-auto mb-2 opacity-50" />
+                <p className="text-sm opacity-50">No featured image</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Category Tag */}
         <div className="mb-4">
@@ -191,15 +200,20 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
                   href={`/blog/${relatedPost.slug}`}
                   className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
-                  {relatedPost.featuredImage && (
-                    <div className="h-40 overflow-hidden">
-                      <img
-                        src={relatedPost.featuredImage}
-                        alt={relatedPost.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                  )}
+                  {/* ✅ Related post image with fallback */}
+                  <div className="h-40 overflow-hidden relative">
+                    <img
+                      src={relatedPost.featuredImage || defaultImage}
+                      alt={relatedPost.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    {!relatedPost.featuredImage && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-white/50" />
+                      </div>
+                    )}
+                  </div>
                   <div className="p-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                       {relatedPost.title}

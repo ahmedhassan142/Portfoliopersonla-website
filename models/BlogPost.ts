@@ -1,3 +1,4 @@
+// ahtech.fun/models/BlogPost.ts
 import mongoose from 'mongoose';
 
 const blogPostSchema = new mongoose.Schema({
@@ -13,7 +14,7 @@ const blogPostSchema = new mongoose.Schema({
     required: [true, 'Content is required'],
   },
   
-  // ✅ OPTIONAL FIELDS (auto-generated if not provided)
+  // ✅ OPTIONAL FIELDS
   slug: {
     type: String,
     unique: true,
@@ -62,10 +63,13 @@ const blogPostSchema = new mongoose.Schema({
     type: String,
     default: 'webhook',
   },
+  
+  // ✅ NEW: Featured Image field
   featuredImage: {
     type: String,
     default: '',
   },
+  
   stats: {
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
@@ -94,9 +98,8 @@ blogPostSchema.index({ category: 1, publishedAt: -1 });
 blogPostSchema.index({ published: 1, publishedAt: -1 });
 blogPostSchema.index({ tags: 1 });
 
-// ✅ Pre-save hook - auto-generate optional fields (NO next() function)
+// ✅ Pre-save hook
 // blogPostSchema.pre('save', function(doc) {
-//   // Generate slug from title if not provided
 //   if (!doc.slug && doc.title) {
 //     doc.slug = doc.title
 //       .toLowerCase()
@@ -106,29 +109,24 @@ blogPostSchema.index({ tags: 1 });
 //       .trim();
 //   }
   
-//   // Auto-generate excerpt from content if not provided
 //   if (!doc.excerpt && doc.content) {
 //     doc.excerpt = doc.content
-//       .replace(/<[^>]*>/g, '') // Remove HTML tags
+//       .replace(/<[^>]*>/g, '')
 //       .substring(0, 200) + '...';
 //   }
   
-//   // Calculate reading time
 //   if (doc.content) {
 //     const words = doc.content.split(/\s+/).length;
 //     doc.readingTime = Math.max(1, Math.ceil(words / 200));
 //   }
   
-//   // Set publishedAt if published and not set
 //   if (doc.published && !doc.publishedAt) {
 //     doc.publishedAt = new Date();
 //   }
   
-//   // Update timestamp
 //   doc.updatedAt = new Date();
 // });
 
-// // ✅ Auto-update updatedAt on findOneAndUpdate (NO next() function)
 // blogPostSchema.pre('findOneAndUpdate', function(doc) {
 //   doc.set({ updatedAt: new Date() });
 // });

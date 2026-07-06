@@ -12,7 +12,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('📦 Body:', JSON.stringify(body, null, 2));
     
-    const { title, content, category, tags, excerpt, author } = body;
+    // ✅ Get all fields including featuredImage
+    const { 
+      title, 
+      content, 
+      category, 
+      tags, 
+      excerpt, 
+      author, 
+      featuredImage,  // ✅ This is the new field
+      source,
+      featured 
+    } = body;
     
     // ✅ ONLY title and content are required
     if (!title || !content) {
@@ -38,17 +49,18 @@ export async function POST(request: NextRequest) {
     // ✅ Check if slug already exists
     const existingPost = await BlogPost.findOne({ slug });
     if (existingPost) {
-      // ✅ Append timestamp to make it unique
       const timestamp = Date.now();
       slug = `${slug}-${timestamp}`;
       console.log(`🔄 Slug already exists, using: ${slug}`);
     }
     
-    // ✅ Create blog post data
+    // ✅ Create blog post data with featuredImage
     const postData: any = {
       title: title.trim(),
       content: content.trim(),
-      slug: slug, // Use the unique slug
+      slug: slug,
+      // ✅ Add featuredImage if provided
+      featuredImage: featuredImage || '',
     };
     
     // ✅ Add optional fields if provided
@@ -56,12 +68,15 @@ export async function POST(request: NextRequest) {
     if (category) postData.category = category.trim();
     if (tags && Array.isArray(tags)) postData.tags = tags;
     if (author) postData.author = author.trim();
+    if (source) postData.source = source;
+    if (featured !== undefined) postData.featured = featured;
     
     // ✅ Create and save the post
     const post = new BlogPost(postData);
     await post.save();
     
     console.log(`✅ Blog post created! ID: ${post._id}, Slug: ${post.slug}`);
+    console.log(`🖼️ Featured Image: ${post.featuredImage || 'None'}`);
     
     return NextResponse.json({
       success: true,
@@ -74,41 +89,35 @@ export async function POST(request: NextRequest) {
         excerpt: post.excerpt,
         category: post.category,
         readingTime: post.readingTime,
+        featuredImage: post.featuredImage, // ✅ Return the image in response
       }
     }, { status: 201 });
     
   } catch (error: any) {
     console.error('❌ Webhook error:', error);
     
-    // ✅ Handle duplicate slug error (fallback)
+    // Handle duplicate slug
     if (error.code === 11000) {
-      console.log('🔄 Duplicate slug detected, retrying with timestamp...');
+      console.log('🔄 Duplicate slug, retrying with timestamp...');
       try {
         const body = await request.json();
-        const { title, content, category, tags, excerpt, author } = body;
+        const { title, content, featuredImage } = body;
         
-        // ✅ Create unique slug with timestamp
-        const baseSlug = title
+        const newSlug = `${title
           .toLowerCase()
           .replace(/[^\w\s-]/g, '')
           .replace(/\s+/g, '-')
           .replace(/--+/g, '-')
-          .trim();
-        const uniqueSlug = `${baseSlug}-${Date.now()}`;
+          .trim()}-${Date.now()}`;
         
-        // ✅ Create post with unique slug
-        const postData: any = {
+        const post = new BlogPost({
           title: title.trim(),
           content: content.trim(),
-          slug: uniqueSlug,
-        };
-        
-        if (excerpt) postData.excerpt = excerpt.trim();
-        if (category) postData.category = category.trim();
-        if (tags && Array.isArray(tags)) postData.tags = tags;
-        if (author) postData.author = author.trim();
-        
-        const post = new BlogPost(postData);
+          slug: newSlug,
+          category: body.category || 'Uncategorized',
+          tags: body.tags || [],
+          featuredImage: featuredImage || '',
+        });
         await post.save();
         
         return NextResponse.json({
@@ -119,6 +128,7 @@ export async function POST(request: NextRequest) {
             title: post.title,
             slug: post.slug,
             url: `/blog/${post.slug}`,
+            featuredImage: post.featuredImage,
           }
         }, { status: 201 });
       } catch (retryError: any) {
@@ -143,14 +153,15 @@ export async function GET() {
     status: 'Webhook is active!',
     message: 'Send POST requests with { title, content } to create blog posts',
     required: ['title', 'content'],
-    optional: ['excerpt', 'category', 'tags', 'author'],
+    optional: ['excerpt', 'category', 'tags', 'author', 'featuredImage'],
     example: {
       title: 'My Blog Post',
       content: 'This is the full content...',
       excerpt: 'A short summary...',
       category: 'Technology',
       tags: ['AI', 'Webhook'],
-      author: 'AI Generator'
+      author: 'AI Generator',
+      featuredImage: 'https://example.com/image.jpg'
     }
   });
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ChatWidget from '@/components/Shared/ChatWidget'
-import { Calendar, User, ArrowRight, Clock, Eye, Heart, Tag, Search, X, Loader2 } from 'lucide-react'
+import { Calendar, User, ArrowRight, Clock, Eye, Heart, Tag, Search, X, Loader2, ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -87,12 +87,10 @@ export default function BlogPage() {
   useEffect(() => {
     let filtered = posts
 
-    // Filter by category
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(post => post.category === selectedCategory)
     }
 
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(post => 
@@ -103,7 +101,6 @@ export default function BlogPage() {
       )
     }
 
-    // Filter by tag
     if (selectedTag) {
       filtered = filtered.filter(post => 
         post.tags && post.tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
@@ -134,6 +131,9 @@ export default function BlogPage() {
   const featuredPosts = filteredPosts.filter(post => post.featured)
   const latestPosts = filteredPosts.filter(post => !post.featured)
   const popularTags = getAllTags()
+
+  // ✅ Default image if no featured image
+  const defaultImage = 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'
 
   if (loading) {
     return (
@@ -288,12 +288,13 @@ export default function BlogPage() {
                     key={post.slug}
                     className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
                   >
-                    {/* Image */}
+                    {/* ✅ Featured Image with fallback */}
                     <div className="relative h-72 overflow-hidden">
                       <img 
-                        src={post.featuredImage || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'} 
+                        src={post.featuredImage || defaultImage} 
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        loading="lazy"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                       
@@ -393,11 +394,13 @@ export default function BlogPage() {
                       key={post.slug}
                       className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                     >
+                      {/* ✅ Featured Image with fallback */}
                       <div className="relative h-48 overflow-hidden">
                         <img 
-                          src={post.featuredImage || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'} 
+                          src={post.featuredImage || defaultImage} 
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         
