@@ -198,10 +198,10 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
         {post.tags && post.tags.length > 0 && (
           <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-4">
-              <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {/* <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" /> */}
+              {/* <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 SEO Keywords
-              </h3>
+              </h3> */}
             </div>
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
