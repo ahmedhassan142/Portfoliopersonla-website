@@ -1,7 +1,7 @@
 // ahtech.fun/app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 // ✅ CHANGE THIS LINE to match your actual db connection file
-import {connectDB} from '@/lib/db';  // or '@/lib/db' depending on your setup
+import { connectDB } from '@/lib/db';  // or '@/lib/db' depending on your setup
 import BlogPost from '@/models/BlogPost';
 
 export async function POST(request: NextRequest) {
