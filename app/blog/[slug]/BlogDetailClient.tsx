@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Calendar, User, ArrowLeft, Clock, Eye, Heart, Tag, Loader2, Share2, ImageIcon } from 'lucide-react'
+import { Calendar, User, ArrowLeft, Clock, Eye, Heart, Tag, Loader2, Share2, ImageIcon, Sparkles, CheckCircle } from 'lucide-react'
 import ChatWidget from '@/components/Shared/ChatWidget'
 
 interface Author {
@@ -33,6 +33,7 @@ interface BlogPost {
     shares: number
   }
   featuredImage?: string
+  source?: string
 }
 
 interface BlogDetailClientProps {
@@ -64,6 +65,62 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
     }
   }
 
+  // ✅ Parse content with proper heading detection
+  const parseContent = (content: string): string => {
+    if (!content) return ''
+    
+    // Convert markdown-style headings to HTML
+    let parsed = content
+      // Convert ## Heading to <h2>Heading</h2>
+      .replace(/^##\s+(.+)$/gm, (match, heading) => {
+        return `\n\n<h2>${heading}</h2>\n\n`
+      })
+      // Convert ### Heading to <h3>Heading</h3>
+      .replace(/^###\s+(.+)$/gm, (match, heading) => {
+        return `\n\n<h3>${heading}</h3>\n\n`
+      })
+      // Convert #### Heading to <h4>Heading</h4>
+      .replace(/^####\s+(.+)$/gm, (match, heading) => {
+        return `\n\n<h4>${heading}</h4>\n\n`
+      })
+      // Convert **bold** to <strong>bold</strong>
+      .replace(/\*\*(.+?)\*\*/g, (match, text) => {
+        return `<strong>${text}</strong>`
+      })
+      // Convert *italic* to <em>italic</em>
+      .replace(/\*(.+?)\*/g, (match, text) => {
+        return `<em>${text}</em>`
+      })
+      // Convert bullet points
+      .replace(/^\*\s+(.+)$/gm, (match, item) => {
+        return `<li>${item}</li>`
+      })
+      // Wrap consecutive bullet points in <ul>
+      .replace(/(<li>.*<\/li>\n?)+/g, (match) => {
+        return `<ul>${match}</ul>`
+      })
+      // Convert newlines to <br /> for paragraphs
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br />')
+    
+    // Wrap in paragraphs if not already wrapped
+    if (!parsed.startsWith('<')) {
+      parsed = `<p>${parsed}</p>`
+    }
+    
+    return parsed
+  }
+
+  // ✅ Get reading time
+  const getReadingTime = (content: string): number => {
+    if (!content) return 1
+    const words = content.replace(/[#*]/g, '').split(/\s+/).length
+    return Math.max(1, Math.ceil(words / 200))
+  }
+
+  // ✅ Check if content is AI generated
+  const isAIGenerated = post.source === 'AI Content Writer' || post.author === 'AI Content Writer'
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <article className="max-w-4xl mx-auto px-4 py-8">
@@ -94,14 +151,22 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           )}
         </div>
 
-        {/* Category Tag */}
-        <div className="mb-4">
+        {/* ✅ Category Tag + AI Badge */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
           <Link
             href={`/blog?category=${encodeURIComponent(post.category)}`}
             className="px-3 py-1 bg-blue-600 text-white text-sm font-semibold rounded-full hover:bg-blue-700 transition-colors"
           >
             {post.category}
           </Link>
+          
+          {/* ✅ AI Content Generator Badge */}
+          {isAIGenerated && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium rounded-full">
+              <Sparkles className="w-3 h-3" />
+              AI Generated
+            </span>
+          )}
         </div>
 
         {/* Title */}
@@ -109,7 +174,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           {post.title}
         </h1>
 
-        {/* Metadata */}
+        {/* ✅ Metadata with AI Content Generator label */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
           <span className="flex items-center">
             <User className="w-4 h-4 mr-1" />
@@ -125,7 +190,7 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
           </span>
           <span className="flex items-center">
             <Clock className="w-4 h-4 mr-1" />
-            {post.readingTime || 1} min read
+            {getReadingTime(post.content)} min read
           </span>
           <span className="flex items-center">
             <Eye className="w-4 h-4 mr-1" />
@@ -138,28 +203,68 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
             <Heart className={`w-4 h-4 mr-1 ${liked ? 'fill-red-500' : ''}`} />
             {likesCount} likes
           </button>
+          
+          {/* ✅ AI Content Generator label in metadata */}
+          {isAIGenerated && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded-full">
+              <Sparkles className="w-3 h-3" />
+              AI Content Generator
+            </span>
+          )}
         </div>
 
-        {/* Tags */}
+        {/* ✅ Content with proper heading detection */}
+        <div 
+          className="prose prose-lg dark:prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: parseContent(post.content) }}
+        />
+
+        {/* ✅ SEO Keywords Section - Displayed at the BOTTOM of content */}
         {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {post.tags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/blog?tag=${encodeURIComponent(tag)}`}
-                className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-blue-600 hover:text-white transition-colors"
-              >
-                #{tag}
-              </Link>
-            ))}
+          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                SEO Keywords
+              </h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                ({post.tags.length} keywords)
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/blog?tag=${encodeURIComponent(tag)}`}
+                  className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-600 hover:text-white transition-colors"
+                >
+                  #{tag}
+                </Link>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+              💡 These keywords help search engines understand your content
+            </p>
           </div>
         )}
 
-        {/* Content */}
-        <div 
-          className="prose prose-lg dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        {/* ✅ AI Content Generator Footer */}
+        {isAIGenerated && (
+          <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  Generated by AI Content Writer
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  This content was created using advanced AI technology
+                </p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-green-500 ml-auto" />
+            </div>
+          </div>
+        )}
 
         {/* Share Section */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
@@ -200,7 +305,6 @@ export default function BlogDetailClient({ post, relatedPosts }: BlogDetailClien
                   href={`/blog/${relatedPost.slug}`}
                   className="group bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* ✅ Related post image with fallback */}
                   <div className="h-40 overflow-hidden relative">
                     <img
                       src={relatedPost.featuredImage || defaultImage}
