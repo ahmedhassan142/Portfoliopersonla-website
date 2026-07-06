@@ -2,233 +2,90 @@
 
 import { useState, useEffect } from 'react'
 import ChatWidget from '@/components/Shared/ChatWidget'
-import { Calendar, User, ArrowRight, Clock, Eye, Heart, Tag, Search, X } from 'lucide-react'
+import { Calendar, User, ArrowRight, Clock, Eye, Heart, Tag, Search, X, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-
-// Define Blog Post interface matching dental website pattern
+// Define Blog Post interface matching the backend model
 interface BlogPost {
+  _id?: string
   slug: string
   title: string
   excerpt: string
+  content?: string
   category: string
   author: string
-  authorRole: string
-  date: string
-  readTime: string
   tags: string[]
-  image: string
+  publishedAt: string
+  readingTime: number
   featured: boolean
-  views: number
-  likes: number
-}
-
-// Helper function to create URL-friendly slugs (same as dental website)
-const createSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s]/gi, '')
-    .replace(/\s+/g, '-')
-}
-
-const blogPosts: BlogPost[] = [
-  // Existing Posts with slugs added
-  {
-    slug: createSlug('The Future of Web Development: Next.js 14 Features'),
-    title: 'The Future of Web Development: Next.js 14 Features',
-    excerpt: 'Explore the latest features in Next.js 14 including server actions, partial prerendering, and improved metadata handling. Learn how these innovations are revolutionizing modern web development.',
-    category: 'Web Development',
-    author: 'Alex Johnson',
-    authorRole: 'Senior Developer',
-    date: 'Jan 15, 2024',
-    readTime: '5 min read',
-    tags: ['Next.js', 'React', 'TypeScript'],
-    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    featured: true,
-    views: 1234,
-    likes: 89,
-  },
-  {
-    slug: createSlug('Building Scalable Mobile Apps with React Native'),
-    title: 'Building Scalable Mobile Apps with React Native',
-    excerpt: 'Best practices and architecture patterns for building enterprise-grade mobile applications. Learn about state management, navigation, and performance optimization.',
-    category: 'Mobile Development',
-    author: 'Sarah Chen',
-    authorRole: 'Mobile Lead',
-    date: 'Jan 10, 2024',
-    readTime: '8 min read',
-    tags: ['React Native', 'Mobile', 'Performance'],
-    image: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80',
-    featured: true,
-    views: 987,
-    likes: 67,
-  },
-  {
-    slug: createSlug('AI Integration in Modern Applications'),
-    title: 'AI Integration in Modern Applications',
-    excerpt: 'How to effectively integrate AI capabilities into your existing applications using OpenAI, LangChain, and vector databases. Real-world examples and strategies.',
-    category: 'AI & Machine Learning',
-    author: 'Mike Rodriguez',
-    authorRole: 'AI Engineer',
-    date: 'Jan 5, 2024',
-    readTime: '6 min read',
-    tags: ['AI', 'ChatGPT', 'Machine Learning'],
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    featured: false,
-    views: 756,
-    likes: 45,
-  },
-  {
-    slug: createSlug('Performance Optimization Techniques'),
-    title: 'Performance Optimization Techniques',
-    excerpt: 'Advanced techniques to optimize web application performance and Core Web Vitals. Learn about code splitting, image optimization, and caching strategies.',
-    category: 'Web Development',
-    author: 'Emma Wilson',
-    authorRole: 'Performance Specialist',
-    date: 'Dec 28, 2023',
-    readTime: '7 min read',
-    tags: ['Performance', 'SEO', 'Optimization'],
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2015&q=80',
-    featured: false,
-    views: 654,
-    likes: 34,
-  },
-  {
-    slug: createSlug('State Management in Large Applications'),
-    title: 'State Management in Large Applications',
-    excerpt: 'Comparing different state management solutions for complex React applications. Redux Toolkit, Zustand, Jotai, and Context API use cases.',
-    category: 'Web Development',
-    author: 'David Kim',
-    authorRole: 'Frontend Architect',
-    date: 'Dec 20, 2023',
-    readTime: '9 min read',
-    tags: ['State Management', 'Redux', 'Zustand'],
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    featured: false,
-    views: 543,
-    likes: 28,
-  },
-  {
-    slug: createSlug('Building RESTful APIs with Node.js'),
-    title: 'Building RESTful APIs with Node.js',
-    excerpt: 'Complete guide to building secure and scalable REST APIs using Node.js, Express, and MongoDB. Includes authentication and validation.',
-    category: 'Backend Development',
-    author: 'Lisa Wang',
-    authorRole: 'Backend Lead',
-    date: 'Dec 15, 2023',
-    readTime: '10 min read',
-    tags: ['Node.js', 'API', 'Backend'],
-    image: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80',
-    featured: false,
-    views: 432,
-    likes: 23,
-  },
-  {
-    slug: createSlug('Mastering TypeScript: Advanced Patterns'),
-    title: 'Mastering TypeScript: Advanced Patterns',
-    excerpt: 'Deep dive into advanced TypeScript patterns including generics, conditional types, and mapped types for type-safe code.',
-    category: 'Web Development',
-    author: 'Alex Johnson',
-    authorRole: 'Senior Developer',
-    date: 'Jan 18, 2024',
-    readTime: '7 min read',
-    tags: ['TypeScript', 'JavaScript', 'Programming'],
-    image: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?ixlib=rb-4.0.3&auto=format&fit=crop&w=2128&q=80',
-    featured: true,
-    views: 892,
-    likes: 56,
-  },
-  {
-    slug: createSlug('DevOps Best Practices for 2024'),
-    title: 'DevOps Best Practices for 2024',
-    excerpt: 'Essential DevOps practices including CI/CD pipelines, Docker containers, and Kubernetes orchestration for modern applications.',
-    category: 'DevOps',
-    author: 'Michael Chen',
-    authorRole: 'DevOps Engineer',
-    date: 'Jan 12, 2024',
-    readTime: '8 min read',
-    tags: ['DevOps', 'Docker', 'Kubernetes'],
-    image: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    featured: false,
-    views: 678,
-    likes: 41,
-  },
-  // NEW AI-FOCUSED POSTS with slugs
-  {
-    slug: createSlug('AI Agents: The Future of Autonomous Systems'),
-    title: 'AI Agents: The Future of Autonomous Systems',
-    excerpt: 'Discover how AI agents are transforming business automation. Learn about autonomous agents, multi-agent systems, and how they can handle complex tasks without human intervention.',
-    category: 'AI & Machine Learning',
-    author: 'Mike Rodriguez',
-    authorRole: 'AI Engineer',
-    date: 'Feb 10, 2024',
-    readTime: '9 min read',
-    tags: ['AI Agents', 'Autonomous Systems', 'Machine Learning', 'LangChain'],
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    featured: true,
-    views: 2345,
-    likes: 178,
-  },
-  {
-    slug: createSlug('The AI Revolution: How Generative AI is Reshaping Industries'),
-    title: 'The AI Revolution: How Generative AI is Reshaping Industries',
-    excerpt: 'From GPT-4 to DALL-E 3 and beyond, explore how generative AI is revolutionizing content creation, software development, design, and business operations across every industry.',
-    category: 'AI & Machine Learning',
-    author: 'Sarah Chen',
-    authorRole: 'AI Research Lead',
-    date: 'Feb 5, 2024',
-    readTime: '12 min read',
-    tags: ['Generative AI', 'GPT-4', 'DALL-E', 'AI Revolution'],
-    image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=1965&q=80',
-    featured: true,
-    views: 3456,
-    likes: 267,
-  },
-  {
-    slug: createSlug('LangChain: Building Powerful AI Workflows'),
-    title: 'LangChain: Building Powerful AI Workflows',
-    excerpt: 'Master LangChain for building sophisticated AI applications. Learn about chains, agents, memory, tools, and how to orchestrate multiple AI components for complex, real-world tasks.',
-    category: 'AI & Machine Learning',
-    author: 'Alex Johnson',
-    authorRole: 'Senior Developer',
-    date: 'Feb 1, 2024',
-    readTime: '15 min read',
-    tags: ['LangChain', 'AI Workflows', 'Agents', 'LLM'],
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    featured: true,
-    views: 1876,
-    likes: 143,
+  stats: {
+    views: number
+    likes: number
+    shares: number
   }
-]
+  featuredImage?: string
+  createdAt: string
+  updatedAt: string
+}
 
 const categories: string[] = [
   'All',
   'Web Development',
   'Mobile Development',
   'AI & Machine Learning',
-  'Backend',
+  'Backend Development',
   'DevOps',
   'Cloud Computing',
-  'Security'
-]
-
-const popularTags: string[] = [
-  'Next.js', 'React', 'TypeScript', 'Node.js', 'Python',
-  'AI', 'Machine Learning', 'AI Agents', 'LangChain', 'Generative AI',
-  'DevOps', 'Cloud', 'Security'
+  'Security',
+  'Uncategorized'
 ]
 
 export default function BlogPage() {
+  const [loading, setLoading] = useState(true)
+  const [posts, setPosts] = useState<BlogPost[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>(blogPosts)
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([])
   const [visiblePosts, setVisiblePosts] = useState<number>(6)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
 
-  // Filter posts based on category, search, and tag
+  // ✅ Fetch posts from backend API
   useEffect(() => {
-    let filtered = blogPosts
+    fetchPosts()
+  }, [])
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/blog?limit=100')
+      const data = await res.json()
+      
+      if (data.success) {
+        setPosts(data.data)
+        setFilteredPosts(data.data)
+      } else {
+        console.error('Failed to fetch posts:', data.message)
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ✅ Extract unique tags from posts
+  const getAllTags = (): string[] => {
+    const tagSet = new Set<string>()
+    posts.forEach(post => {
+      post.tags?.forEach(tag => tagSet.add(tag))
+    })
+    return Array.from(tagSet).slice(0, 12)
+  }
+
+  // ✅ Filter posts based on category, search, and tag
+  useEffect(() => {
+    let filtered = posts
 
     // Filter by category
     if (selectedCategory !== 'All') {
@@ -242,19 +99,19 @@ export default function BlogPage() {
         post.title.toLowerCase().includes(query) ||
         post.excerpt.toLowerCase().includes(query) ||
         post.author.toLowerCase().includes(query) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query))
+        (post.tags && post.tags.some(tag => tag.toLowerCase().includes(query)))
       )
     }
 
     // Filter by tag
     if (selectedTag) {
       filtered = filtered.filter(post => 
-        post.tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
+        post.tags && post.tags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
       )
     }
 
     setFilteredPosts(filtered)
-  }, [selectedCategory, searchQuery, selectedTag])
+  }, [selectedCategory, searchQuery, selectedTag, posts])
 
   const handleTagClick = (tag: string): void => {
     if (selectedTag === tag) {
@@ -276,6 +133,18 @@ export default function BlogPage() {
 
   const featuredPosts = filteredPosts.filter(post => post.featured)
   const latestPosts = filteredPosts.filter(post => !post.featured)
+  const popularTags = getAllTags()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">Loading articles...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -295,7 +164,9 @@ export default function BlogPage() {
           <div className="animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-8">
               <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-              <span className="text-white text-sm font-medium">Latest Tech Insights</span>
+              <span className="text-white text-sm font-medium">
+                {posts.length} Articles Published
+              </span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
@@ -333,21 +204,23 @@ export default function BlogPage() {
             </div>
 
             {/* Popular Tags */}
-            <div className="flex flex-wrap justify-center gap-3">
-              {popularTags.slice(0, 8).map((tag, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleTagClick(tag)}
-                  className={`px-4 py-2 rounded-full text-sm transition-colors border ${
-                    selectedTag === tag
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border-white/20'
-                  }`}
-                >
-                  #{tag}
-                </button>
-              ))}
-            </div>
+            {popularTags.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-3">
+                {popularTags.slice(0, 8).map((tag, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleTagClick(tag)}
+                    className={`px-4 py-2 rounded-full text-sm transition-colors border ${
+                      selectedTag === tag
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border-white/20'
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -396,7 +269,7 @@ export default function BlogPage() {
             {/* Results Count */}
             <div className="mt-6 text-center">
               <span className="text-gray-500 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-sm">
-                Showing {filteredPosts.length} of {blogPosts.length} articles
+                Showing {filteredPosts.length} of {posts.length} articles
               </span>
             </div>
           </div>
@@ -418,7 +291,7 @@ export default function BlogPage() {
                     {/* Image */}
                     <div className="relative h-72 overflow-hidden">
                       <img 
-                        src={post.image} 
+                        src={post.featuredImage || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'} 
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
@@ -445,11 +318,15 @@ export default function BlogPage() {
                         </span>
                         <span className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
-                          {post.date}
+                          {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
                         </span>
                         <span className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
-                          {post.readTime}
+                          {post.readingTime || 1} min read
                         </span>
                       </div>
 
@@ -463,7 +340,7 @@ export default function BlogPage() {
 
                       <div className="flex items-center justify-between">
                         <div className="flex gap-2">
-                          {post.tags.slice(0, 3).map(tag => (
+                          {post.tags && post.tags.slice(0, 3).map(tag => (
                             <button
                               key={tag}
                               onClick={() => handleTagClick(tag)}
@@ -476,11 +353,11 @@ export default function BlogPage() {
                         <div className="flex items-center gap-3 text-sm text-gray-500">
                           <span className="flex items-center">
                             <Eye className="w-4 h-4 mr-1" />
-                            {post.views}
+                            {post.stats?.views || 0}
                           </span>
                           <span className="flex items-center">
                             <Heart className="w-4 h-4 mr-1" />
-                            {post.likes}
+                            {post.stats?.likes || 0}
                           </span>
                         </div>
                       </div>
@@ -518,7 +395,7 @@ export default function BlogPage() {
                     >
                       <div className="relative h-48 overflow-hidden">
                         <img 
-                          src={post.image} 
+                          src={post.featuredImage || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80'} 
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
@@ -535,11 +412,15 @@ export default function BlogPage() {
                         <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
                           <span className="flex items-center">
                             <Calendar className="w-3 h-3 mr-1" />
-                            {post.date}
+                            {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
                           </span>
                           <span className="flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
-                            {post.readTime}
+                            {post.readingTime || 1} min read
                           </span>
                         </div>
 
@@ -552,7 +433,7 @@ export default function BlogPage() {
                         </p>
 
                         <div className="flex flex-wrap gap-1 mb-4">
-                          {post.tags.slice(0, 2).map(tag => (
+                          {post.tags && post.tags.slice(0, 2).map(tag => (
                             <button
                               key={tag}
                               onClick={() => handleTagClick(tag)}
