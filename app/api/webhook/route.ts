@@ -1,52 +1,52 @@
 // ahtech.fun/app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-// ✅ IMPORTANT: Change this to default import
-import connectDB from '../../../lib/db';  
-import BlogPost from '../../../models/BlogPost';
+import mongoose from 'mongoose';
+
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://ah770643:2H3IHP4cvAsXzhW8@cluster0.bdbqw.mongodb.net/Tech-service?retryWrites=true&w=majority&appName=Cluster0";
+
+// Define BlogPost schema directly here for testing
+const BlogPostSchema = new mongoose.Schema({
+  title: String,
+  slug: { type: String, unique: true },
+  excerpt: String,
+  content: String,
+  category: String,
+  tags: [String],
+  status: String,
+  published: Boolean,
+  publishedAt: Date,
+  readingTime: Number,
+  source: String,
+});
+
+const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost', BlogPostSchema);
 
 export async function POST(request: NextRequest) {
   try {
     console.log('📥 ========== WEBHOOK RECEIVED ==========');
     
-    // 1. Get the body
     const body = await request.json();
-    console.log('📦 Body:', JSON.stringify(body, null, 2));
-    
     const { title, content, category, tags } = body;
     
-    // 2. Validate
     if (!title || !content) {
-      console.log('❌ Missing title or content');
       return NextResponse.json({
         success: false,
         error: 'Title and content are required'
       }, { status: 400 });
     }
     
-    // 3. Connect to database with better error handling
+    // Connect directly
     console.log('🔌 Connecting to database...');
-    try {
-      await connectDB();
-      console.log('✅ Database connected');
-    } catch (dbError: any) {
-      console.error('❌ Database connection failed:', dbError);
-      return NextResponse.json({
-        success: false,
-        error: `Database connection failed: ${dbError.message}`
-      }, { status: 500 });
-    }
+    await mongoose.connect(MONGODB_URI);
+    console.log('✅ Database connected');
     
-    // 4. Generate slug
     const slug = title
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/--+/g, '-')
       .trim();
-    console.log(`🔗 Slug: ${slug}`);
     
-    // 5. Create blog post
-    console.log('💾 Saving to database...');
     const post = await BlogPost.create({
       title,
       slug,
@@ -61,8 +61,6 @@ export async function POST(request: NextRequest) {
       source: 'AI Content Writer',
     });
     
-    console.log(`✅ Blog post created! ID: ${post._id}`);
-    
     return NextResponse.json({
       success: true,
       message: 'Blog post created successfully!',
@@ -76,53 +74,6 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     console.error('❌ Webhook error:', error);
-    console.error('❌ Error stack:', error.stack);
-    
-    // Handle duplicate slug
-    if (error.code === 11000) {
-      console.log('🔄 Duplicate slug, retrying...');
-      try {
-        const body = await request.json();
-        const { title, content } = body;
-        const newSlug = `${title
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/--+/g, '-')
-          .trim()}-${Date.now()}`;
-        
-        const post = await BlogPost.create({
-          title,
-          slug: newSlug,
-          excerpt: content.substring(0, 160),
-          content,
-          category: body.category || 'General',
-          tags: body.tags || [],
-          status: 'published',
-          published: true,
-          publishedAt: new Date(),
-          readingTime: Math.ceil(content.split(/\s+/).length / 200),
-          source: 'AI Content Writer',
-        });
-        
-        return NextResponse.json({
-          success: true,
-          post: {
-            id: post._id,
-            title: post.title,
-            slug: post.slug,
-            url: `/blog/${post.slug}`,
-          }
-        }, { status: 201 });
-      } catch (retryError: any) {
-        console.error('❌ Retry failed:', retryError);
-        return NextResponse.json({
-          success: false,
-          error: 'Failed to create post with unique slug'
-        }, { status: 500 });
-      }
-    }
-    
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to create blog post'
