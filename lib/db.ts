@@ -21,6 +21,7 @@ if (!global.mongoose) {
   global.mongoose = cached;
 }
 
+// ✅ Keep the named export
 export async function connectDB() {
   if (cached.conn) {
     return cached.conn;
@@ -46,5 +47,5 @@ export async function connectDB() {
   return cached.conn;
 }
 
-// ✅ ADD THIS DEFAULT EXPORT TO FIX THE ISSUE
+// ✅ ADD THIS DEFAULT EXPORT
 export default connectDB;

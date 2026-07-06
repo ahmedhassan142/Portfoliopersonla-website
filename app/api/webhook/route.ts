@@ -1,7 +1,7 @@
 // ahtech.fun/app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-// ✅ Use default import after adding it to db.ts
-import connectDB from '@/lib/db';
+// ✅ IMPORTANT: Change this to default import
+import connectDB from '@/lib/db';  // NOT { connectDB }
 import BlogPost from '@/models/BlogPost';
 
 export async function POST(request: NextRequest) {
