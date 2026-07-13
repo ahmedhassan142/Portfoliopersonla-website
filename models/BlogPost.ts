@@ -63,6 +63,15 @@ const blogPostSchema = new mongoose.Schema({
     type: String,
     default: 'webhook',
   },
+  // Optional dedup key for webhook deliveries — format: "<userId>:<externalContentId>".
+  // Two webhook deliveries with the same sourceRef return the existing post
+  // instead of creating a duplicate.
+  sourceRef: {
+    type: String,
+    default: null,
+    sparse: true,
+    index: true,
+  },
   
   // ✅ NEW: Featured Image field
   featuredImage: {
