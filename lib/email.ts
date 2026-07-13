@@ -1,16 +1,26 @@
 import nodemailer from 'nodemailer';
 
+// NOTE: SMTP credentials MUST be provided via environment variables.
+// Never hard-code credentials in source — they will leak via git history.
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASS;
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER||"ah770643@gmail.com",
-    pass: process.env.SMTP_PASS||"tzhixkiirkcpahrq",
-  },
+  auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
 });
 
+export function isEmailConfigured() {
+  return Boolean(smtpUser && smtpPass);
+}
+
 export async function sendQuoteConfirmation(quote: any) {
+  if (!isEmailConfigured()) {
+    console.warn('[email] SMTP not configured — skipping customer confirmation');
+    return;
+  }
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@techsolutions.com',
     to: quote.email,
@@ -54,6 +64,10 @@ export async function sendQuoteConfirmation(quote: any) {
 }
 
 export async function sendQuoteNotification(quote: any) {
+  if (!isEmailConfigured()) {
+    console.warn('[email] SMTP not configured — skipping admin notification');
+    return;
+  }
   const mailOptions = {
     from: process.env.SMTP_FROM || 'noreply@techsolutions.com',
     to: process.env.ADMIN_EMAIL || 'admin@techsolutions.com',

@@ -674,17 +674,14 @@ export default function ContactPage() {
 
       {/* Quote Form Modal */}
       {showQuoteForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 md:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="flex justify-between items-center mb-4 sm:mb-6 sticky top-0 bg-white dark:bg-gray-900 z-10 pb-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl sm:text-2xl font-bold">Get Detailed Quote</h3>
-              <button
-                onClick={() => setShowQuoteForm(false)}
-                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              >
-                ✕
-              </button>
-            </div>
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+          onClick={() => setShowQuoteForm(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 md:p-8 max-w-3xl w-full max-h-[92vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <ServiceQuoteForm onClose={() => setShowQuoteForm(false)} />
           </div>
         </div>

@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
 
 const QuoteSchema = new mongoose.Schema({
+  // Friendly quote ID (e.g. QT-2025-0001) shown to customers
+  quoteId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+  },
+
   // Basic Info
   name: {
     type: String,
@@ -124,5 +132,22 @@ QuoteSchema.index({ createdAt: -1 });
 
 // Simple model export - koi virtuals, koi middleware nahi
 const Quote = mongoose.models.Quote || mongoose.model('Quote', QuoteSchema);
+
+// Auto-generate a friendly quote ID (QT-YYYY-NNNN) before saving.
+// We attach the hook after model creation so it always runs.
+(Quote.schema as mongoose.Schema).pre('save', async function (this: any, next: any) {
+  try {
+    if (!this.quoteId) {
+      const year = new Date().getFullYear();
+      const count = await (Quote as any).countDocuments({}) || 0;
+      this.quoteId = `QT-${year}-${String(count + 1).padStart(4, '0')}`;
+    }
+    next();
+  } catch (err: any) {
+    // Fallback: timestamp-based ID if counter fails
+    this.quoteId = `QT-${Date.now().toString().slice(-6)}`;
+    next();
+  }
+});
 
 export default Quote;
